@@ -1,0 +1,9 @@
+{
+  "name": "rifa-300-boletos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de venta de boletos para rifa (300 números) con panel de administrador",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  }
+}

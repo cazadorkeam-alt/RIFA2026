@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Rifa</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div id="loginView" class="login-wrap">
+    <div class="login-card">
+      <h1>Panel del administrador</h1>
+      <label for="passwordInput">Contraseña</label>
+      <input id="passwordInput" type="password" placeholder="Contraseña" />
+      <div id="loginAlert"></div>
+      <button class="primary" id="loginBtn" style="width:100%; margin-top:14px;">Entrar</button>
+    </div>
+  </div>
+
+  <div id="dashView" class="hidden">
+    <header class="top admin-top">
+      <h1>Panel del administrador</h1>
+      <button class="secondary" id="logoutBtn">Cerrar sesión</button>
+    </header>
+
+    <main class="admin-main">
+      <section class="summary">
+        <div class="card"><span id="sumDisponibles">0</span><label>Disponibles</label></div>
+        <div class="card"><span id="sumApartados">0</span><label>Apartados</label></div>
+        <div class="card"><span id="sumVendidos">0</span><label>Vendidos</label></div>
+        <div class="card highlight"><span id="sumTotal">$0</span><label>Total recaudado</label></div>
+      </section>
+
+      <section class="toolbar">
+        <div class="filters">
+          <button class="filter-btn active" data-filter="todos">Todos</button>
+          <button class="filter-btn" data-filter="disponible">Disponibles</button>
+          <button class="filter-btn" data-filter="apartado">Apartados</button>
+          <button class="filter-btn" data-filter="vendido">Vendidos</button>
+        </div>
+        <input id="searchInput" type="text" placeholder="Buscar por número, nombre o teléfono" />
+        <button class="secondary" id="refreshBtn">Actualizar</button>
+      </section>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Estado</th>
+              <th>Comprador</th>
+              <th>Teléfono</th>
+              <th>Apartado</th>
+              <th>Pagado</th>
+              <th>Nota</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="ticketsBody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay hidden" id="editModalOverlay">
+    <div class="modal">
+      <h2 id="editModalTitle">Editar boleto</h2>
+      <label for="editStatus">Estado</label>
+      <select id="editStatus">
+        <option value="disponible">Disponible</option>
+        <option value="apartado">Apartado</option>
+        <option value="vendido">Vendido</option>
+      </select>
+
+      <label for="editName">Nombre del comprador</label>
+      <input id="editName" type="text" />
+
+      <label for="editPhone">Teléfono</label>
+      <input id="editPhone" type="text" />
+
+      <label for="editNote">Nota (opcional)</label>
+      <textarea id="editNote" rows="2"></textarea>
+
+      <div id="editAlert"></div>
+
+      <div class="actions">
+        <button class="secondary" id="editCancelBtn">Cancelar</button>
+        <button class="primary" id="editSaveBtn">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

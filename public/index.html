@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rifa — Aparta tu boleto</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="top">
+    <h1 id="raffleTitle">Cargando rifa…</h1>
+    <p id="raffleDate"></p>
+    <p id="rafflePrice"></p>
+  </header>
+
+  <main>
+    <div class="legend">
+      <span><i class="dot disponible"></i> Disponible</span>
+      <span><i class="dot selected"></i> Seleccionado</span>
+      <span><i class="dot apartado"></i> Apartado</span>
+      <span><i class="dot vendido"></i> Vendido</span>
+    </div>
+
+    <div id="grid" class="grid"></div>
+
+    <footer class="hint">
+      Toca los números que quieras apartar. Se pueden elegir varios a la vez.
+    </footer>
+  </main>
+
+  <div class="bottom-bar">
+    <div class="info">
+      <strong id="selCount">0</strong> seleccionados
+      <span id="selTotal"></span>
+    </div>
+    <button class="primary" id="openModalBtn" disabled>Apartar boletos</button>
+  </div>
+
+  <div class="modal-overlay hidden" id="modalOverlay">
+    <div class="modal">
+      <h2>Apartar boletos</h2>
+      <div class="selected-list" id="modalSelectedList"></div>
+
+      <label for="nameInput">Nombre completo</label>
+      <input id="nameInput" type="text" placeholder="Tu nombre" maxlength="120" />
+
+      <label for="phoneInput">Teléfono (WhatsApp)</label>
+      <input id="phoneInput" type="tel" placeholder="10 dígitos" maxlength="40" />
+
+      <div id="modalAlert"></div>
+      <div id="paymentInfoBox" class="alert success hidden"></div>
+
+      <div class="actions">
+        <button class="secondary" id="cancelModalBtn">Cancelar</button>
+        <button class="primary" id="confirmReserveBtn">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
