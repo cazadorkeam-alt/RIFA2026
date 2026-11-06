@@ -127,7 +127,7 @@ Todo se hace desde el navegador, sin instalar programas.
    | `RAFFLE_TITLE` | ej. `Rifa de Diciembre` |
    | `RAFFLE_DATE` | ej. `1 de diciembre de 2026` |
    | `TOTAL_TICKETS` | `300` |
-   | `TICKET_PRICE` | ej. `100` |
+   | `TICKET_PRICE` | `150` |
    | `CURRENCY` | `MXN` (o tu moneda) |
    | `CONTACT_WHATSAPP` | tu número con código de país, ej. `5213312345678` |
    | `PAYMENT_INFO` | ej. `Transferencia a CLABE 0000 0000 0000 0000 (Tu Nombre)` |
