@@ -94,6 +94,232 @@
     modalOverlay.classList.add('hidden');
   }
 
+  function wrapText(ctx, text, maxWidth) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    words.forEach((word) => {
+      const test = line ? `${line} ${word}` : word;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  // Dibuja un comprobante tipo "boleto" en un <canvas> con los datos de la
+  // compra, para que la persona lo descargue o lo mande por WhatsApp.
+  function buildReceiptCanvas({ name, numbers, total }) {
+    const scale = 2;
+    const baseWidth = 720;
+    const margin = 40;
+    const usableWidth = baseWidth - margin * 2;
+    const FONT = '-apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+
+    const measure = document.createElement('canvas').getContext('2d');
+    measure.font = `600 15px ${FONT}`;
+    const rulesLines = config.drawRules ? wrapText(measure, config.drawRules, usableWidth) : [];
+    let paymentLines = [];
+    if (config.paymentInfo) {
+      measure.font = `400 13px ${FONT}`;
+      paymentLines = wrapText(measure, config.paymentInfo, usableWidth - 24);
+    }
+
+    const pillW = 78;
+    const pillH = 40;
+    const gap = 10;
+    const cols = Math.max(1, Math.floor((usableWidth + gap) / (pillW + gap)));
+    const rows = Math.ceil(numbers.length / cols);
+
+    const headerH = 190;
+    let y = headerH + 56 + 34 + 30; // nombre + total
+    y += 28; // etiqueta "numeros apartados"
+    y += rows * (pillH + gap);
+    if (config.drawDate) y += 24;
+    if (rulesLines.length) y += rulesLines.length * 20 + 10;
+    if (paymentLines.length) y += 30 + paymentLines.length * 18 + 20;
+    y += 80; // aviso + folio
+
+    const baseHeight = Math.max(560, y + margin);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = baseWidth * scale;
+    canvas.height = baseHeight * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, baseWidth, baseHeight);
+
+    const grad = ctx.createLinearGradient(0, 0, baseWidth, 0);
+    grad.addColorStop(0, '#0a3d24');
+    grad.addColorStop(1, '#0b6b3a');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, baseWidth, headerH);
+    ctx.fillStyle = '#d4af37';
+    ctx.fillRect(0, headerH - 4, baseWidth, 4);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `700 25px ${FONT}`;
+    const titleLines = wrapText(ctx, `🎄 ${config.title || 'Rifa'} 🎄`, usableWidth);
+    let ty = 54;
+    titleLines.forEach((line) => {
+      ctx.fillText(line, baseWidth / 2, ty);
+      ty += 30;
+    });
+    ctx.font = `600 15px ${FONT}`;
+    ctx.fillStyle = '#e7f3ea';
+    ctx.fillText('Comprobante de apartado', baseWidth / 2, ty + 16);
+
+    let cy = headerH + 46;
+    ctx.textAlign = 'left';
+    ctx.font = `700 17px ${FONT}`;
+    ctx.fillStyle = '#16281f';
+    ctx.fillText(`Nombre: ${name}`, margin, cy);
+    cy += 34;
+
+    ctx.font = `700 19px ${FONT}`;
+    ctx.fillStyle = '#b3122b';
+    ctx.fillText(`Total a pagar: ${money(total)}`, margin, cy);
+    cy += 30;
+
+    ctx.font = `600 14px ${FONT}`;
+    ctx.fillStyle = '#5b6b63';
+    ctx.fillText('Números apartados:', margin, cy);
+    cy += 16;
+
+    let px = margin;
+    let py = cy;
+    numbers.forEach((n, i) => {
+      if (i > 0 && i % cols === 0) {
+        px = margin;
+        py += pillH + gap;
+      }
+      ctx.fillStyle = '#e3f6ea';
+      ctx.strokeStyle = '#0b6b3a';
+      ctx.lineWidth = 1;
+      roundRect(ctx, px, py, pillW, pillH, 8);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#0b6b3a';
+      ctx.font = `700 16px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(String(n).padStart(3, '0'), px + pillW / 2, py + pillH / 2 + 6);
+      ctx.textAlign = 'left';
+      px += pillW + gap;
+    });
+    cy = py + pillH + 22;
+
+    if (config.drawDate) {
+      ctx.font = `600 14px ${FONT}`;
+      ctx.fillStyle = '#16281f';
+      ctx.fillText(`Sorteo: ${config.drawDate}`, margin, cy);
+      cy += 24;
+    }
+    if (rulesLines.length) {
+      ctx.font = `italic 400 13px ${FONT}`;
+      ctx.fillStyle = '#8a6d1f';
+      rulesLines.forEach((line) => {
+        ctx.fillText(line, margin, cy);
+        cy += 20;
+      });
+      cy += 6;
+    }
+
+    if (paymentLines.length) {
+      const boxH = paymentLines.length * 18 + 22;
+      ctx.fillStyle = '#e3f6ea';
+      roundRect(ctx, margin, cy, usableWidth, boxH, 8);
+      ctx.fill();
+      ctx.font = `600 13px ${FONT}`;
+      ctx.fillStyle = '#0b6b3a';
+      let li = cy + 24;
+      paymentLines.forEach((line) => {
+        ctx.fillText(line, margin + 12, li);
+        li += 18;
+      });
+      cy += boxH + 20;
+    }
+
+    ctx.font = `400 11.5px ${FONT}`;
+    ctx.fillStyle = '#5b6b63';
+    wrapText(ctx, 'Este comprobante confirma tu apartado, no tu pago. El administrador debe confirmar tu pago para completar la compra.', usableWidth).forEach((line) => {
+      ctx.fillText(line, margin, cy);
+      cy += 16;
+    });
+    cy += 6;
+    ctx.fillText(`Generado: ${new Date().toLocaleString('es-MX')}`, margin, cy);
+
+    return canvas;
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function addActionLink({ href, download, label, cls }) {
+    const link = document.createElement('a');
+    if (href) link.href = href;
+    if (download) link.download = download;
+    if (href && href.startsWith('http')) {
+      link.target = '_blank';
+      link.rel = 'noopener';
+    }
+    link.className = `action-btn ${cls}`;
+    link.textContent = label;
+    modalAlert.appendChild(link);
+    return link;
+  }
+
+  function showReceipt(name, numbers, total) {
+    try {
+      const canvas = buildReceiptCanvas({ name, numbers, total });
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        addActionLink({
+          href: url,
+          download: `comprobante-boleto-${numbers[0]}.png`,
+          label: '🖼️ Descargar comprobante',
+          cls: 'download',
+        });
+
+        const file = new File([blob], 'comprobante.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          const shareBtn = document.createElement('button');
+          shareBtn.type = 'button';
+          shareBtn.className = 'action-btn share';
+          shareBtn.textContent = '📲 Compartir comprobante';
+          shareBtn.addEventListener('click', async () => {
+            try {
+              await navigator.share({
+                files: [file],
+                title: config.title,
+                text: `Aparté los boletos ${numbers.map((n) => String(n).padStart(3, '0')).join(', ')} de ${config.title}.`,
+              });
+            } catch {
+              /* el usuario canceló el share, no hay nada que hacer */
+            }
+          });
+          modalAlert.appendChild(shareBtn);
+        }
+      }, 'image/png');
+    } catch (err) {
+      console.error('No se pudo generar el comprobante', err);
+    }
+  }
+
   async function confirmReserve() {
     const name = nameInput.value.trim();
     const phone = phoneInput.value.trim();
@@ -124,6 +350,9 @@
         return;
       }
 
+      const reservedNumbers = [...selected].sort((a, b) => a - b);
+      const reservedTotal = reservedNumbers.length * (config.price || 0);
+
       let msg = `<div class="alert success">¡Listo! Apartaste ${selected.size} boleto(s). `;
       if (config.contactWhatsapp && !config.contactWhatsappLink) {
         msg += `Envía tu comprobante de pago al WhatsApp ${config.contactWhatsapp}. `;
@@ -136,14 +365,14 @@
         paymentInfoBox.classList.remove('hidden');
       }
 
+      showReceipt(name, reservedNumbers, reservedTotal);
+
       if (config.contactWhatsappLink) {
-        const link = document.createElement('a');
-        link.href = config.contactWhatsappLink;
-        link.target = '_blank';
-        link.rel = 'noopener';
-        link.className = 'whatsapp-btn';
-        link.textContent = '💬 Enviar comprobante por WhatsApp';
-        modalAlert.appendChild(link);
+        addActionLink({
+          href: config.contactWhatsappLink,
+          label: '💬 Abrir chat de WhatsApp',
+          cls: 'whatsapp',
+        });
       }
 
       selected.clear();

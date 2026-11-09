@@ -256,19 +256,23 @@ button.secondary {
 .alert.error { background: var(--red-bg); color: var(--red); }
 .alert.success { background: var(--green-bg); color: var(--green); }
 
-.whatsapp-btn {
+.action-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--whatsapp);
-  color: #fff;
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   padding: 10px 14px;
   border-radius: 8px;
-  margin: 4px 0 10px;
+  margin: 4px 6px 4px 0;
+  border: none;
+  cursor: pointer;
 }
+
+.action-btn.whatsapp { background: var(--whatsapp); color: #fff; }
+.action-btn.download { background: var(--green); color: #fff; }
+.action-btn.share { background: var(--gold); color: #3d2f05; }
 
 .hidden { display: none !important; }
 
