@@ -9,6 +9,7 @@
 .login-card {
   background: var(--card);
   border-radius: var(--radius);
+  border-top: 4px solid var(--gold);
   padding: 28px;
   width: 100%;
   max-width: 360px;
@@ -30,6 +31,11 @@
   justify-content: space-between;
   align-items: center;
   text-align: left;
+}
+
+.admin-top button.secondary {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .admin-main {

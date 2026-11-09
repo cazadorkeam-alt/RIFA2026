@@ -34,6 +34,7 @@
     document.getElementById('rafflePrice').textContent = config.price
       ? `Precio por boleto: ${money(config.price)}`
       : '';
+    document.getElementById('raffleRules').textContent = config.drawRules || '';
   }
 
   async function loadTickets() {
@@ -124,7 +125,7 @@
       }
 
       let msg = `<div class="alert success">¡Listo! Apartaste ${selected.size} boleto(s). `;
-      if (config.contactWhatsapp) {
+      if (config.contactWhatsapp && !config.contactWhatsappLink) {
         msg += `Envía tu comprobante de pago al WhatsApp ${config.contactWhatsapp}. `;
       }
       msg += 'El administrador confirmará tu pago.</div>';
@@ -133,6 +134,16 @@
       if (config.paymentInfo) {
         paymentInfoBox.textContent = config.paymentInfo;
         paymentInfoBox.classList.remove('hidden');
+      }
+
+      if (config.contactWhatsappLink) {
+        const link = document.createElement('a');
+        link.href = config.contactWhatsappLink;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'whatsapp-btn';
+        link.textContent = '💬 Enviar comprobante por WhatsApp';
+        modalAlert.appendChild(link);
       }
 
       selected.clear();
