@@ -1,9 +1,13 @@
-# Sistema de venta de boletos — Rifa (300 números)
+# Rifa Cuida tu Salud con HARFIT - GO (300 números)
 
-Sistema completo para vender/apartar boletos de tu rifa del **1 de diciembre**
-mediante un solo enlace, con panel de administrador protegido por contraseña.
+Sistema completo para vender/apartar boletos de la rifa. El Sorteo Mayor es el
+**martes 15 de diciembre de 2026 a las 20:00 horas**, y se premia acertando en
+orden los tres últimos dígitos del resultado del primer lugar.
 Nadie necesita crear una cuenta para apartar un número; tú controlas todo
 desde el panel de admin.
+
+**Enlace público:** https://rifa-harfit-go-2026.vercel.app
+**Panel admin:** https://rifa-harfit-go-2026.vercel.app/admin
 
 ---
 
