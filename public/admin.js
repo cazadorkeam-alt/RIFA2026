@@ -25,6 +25,7 @@
   let currentFilter = 'todos';
   let currentNumber = null;
   let currency = 'MXN';
+  let raffleConfig = {};
 
   function money(n) {
     try {
@@ -92,11 +93,63 @@
   async function loadConfig() {
     try {
       const res = await fetch('/api/config');
-      const data = await res.json();
-      currency = data.currency || 'MXN';
+      raffleConfig = await res.json();
+      currency = raffleConfig.currency || 'MXN';
     } catch {
       /* no bloquea el panel si falla */
     }
+  }
+
+  function waNumberFromPhone(phone) {
+    const digits = (phone || '').replace(/\D/g, '');
+    if (!digits) return '';
+    return digits.length === 10 ? `52${digits}` : digits;
+  }
+
+  function buildPaymentConfirmationUrl(ticket) {
+    const waNumber = waNumberFromPhone(ticket.buyer_phone);
+    if (!waNumber) return null;
+
+    const paidForBuyer = allTickets
+      .filter((t) => t.status === 'vendido' && t.buyer_phone === ticket.buyer_phone)
+      .map((t) => t.number)
+      .sort((a, b) => a - b);
+    const numbers = paidForBuyer.length ? paidForBuyer : [ticket.number];
+    const numbersText = numbers.map((n) => String(n).padStart(3, '0')).join(', ');
+    const total = numbers.length * Number(raffleConfig.price || 0);
+
+    const lines = [
+      `¡Hola ${ticket.buyer_name || ''}! 🎄 Confirmamos tu pago de "${raffleConfig.title || 'la rifa'}".`,
+      `Boleto(s): ${numbersText}`,
+      `Total pagado: ${money(total)}`,
+    ];
+    if (raffleConfig.drawDate) lines.push(`Sorteo: ${raffleConfig.drawDate}`);
+    if (raffleConfig.drawRules) lines.push(raffleConfig.drawRules);
+    lines.push('¡Ya estás participando! Mucha suerte 🍀');
+
+    const text = encodeURIComponent(lines.join('\n'));
+    return `https://wa.me/${waNumber}?text=${text}`;
+  }
+
+  function showWaBanner(name, waUrl) {
+    const banner = document.getElementById('waBanner');
+    if (!banner) return;
+    banner.innerHTML = `✅ Pago confirmado. Si no se abrió solo, <a href="${waUrl}" target="_blank" rel="noopener">haz clic aquí para enviarle el mensaje a ${name || 'el comprador'}</a>.`;
+    banner.classList.remove('hidden');
+  }
+
+  function sendPaymentConfirmation(ticket, waWindow) {
+    const waUrl = buildPaymentConfirmationUrl(ticket);
+    if (!waUrl) {
+      if (waWindow && !waWindow.closed) waWindow.close();
+      return;
+    }
+    if (waWindow && !waWindow.closed) {
+      waWindow.location.href = waUrl;
+    } else {
+      window.open(waUrl, '_blank');
+    }
+    showWaBanner(ticket.buyer_name, waUrl);
   }
 
   async function loadList() {
@@ -156,17 +209,24 @@
     });
   }
 
-  async function quickUpdate(number, status) {
+  async function quickUpdate(number, status, waWindow) {
     const body = { number, status, keepExisting: true };
     const res = await fetch('/api/admin/update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (res.ok) loadList();
-    else {
-      const data = await res.json();
+    const data = await res.json();
+    if (!res.ok) {
+      if (waWindow && !waWindow.closed) waWindow.close();
       alert(data.error || 'No se pudo actualizar.');
+      return;
+    }
+    await loadList();
+    if (status === 'vendido' && data.ticket) {
+      sendPaymentConfirmation(data.ticket, waWindow);
+    } else if (waWindow && !waWindow.closed) {
+      waWindow.close();
     }
   }
 
@@ -187,7 +247,7 @@
     currentNumber = null;
   }
 
-  async function saveEdit() {
+  async function saveEdit(waWindow) {
     const status = editStatus.value;
     const name = editName.value.trim();
     const phone = editPhone.value.trim();
@@ -195,6 +255,7 @@
 
     if (status === 'apartado' && !name) {
       editAlert.innerHTML = '<div class="alert error">Escribe el nombre del comprador.</div>';
+      if (waWindow && !waWindow.closed) waWindow.close();
       return;
     }
 
@@ -215,12 +276,19 @@
       const data = await res.json();
       if (!res.ok) {
         editAlert.innerHTML = `<div class="alert error">${data.error}</div>`;
+        if (waWindow && !waWindow.closed) waWindow.close();
         return;
       }
       closeEditModal();
-      loadList();
+      await loadList();
+      if (status === 'vendido' && data.ticket) {
+        sendPaymentConfirmation(data.ticket, waWindow);
+      } else if (waWindow && !waWindow.closed) {
+        waWindow.close();
+      }
     } catch {
       editAlert.innerHTML = '<div class="alert error">Error de conexión.</div>';
+      if (waWindow && !waWindow.closed) waWindow.close();
     } finally {
       editSaveBtn.disabled = false;
     }
@@ -232,8 +300,10 @@
     const number = Number(btn.dataset.number);
     const action = btn.dataset.action;
 
-    if (action === 'pagado') quickUpdate(number, 'vendido');
-    else if (action === 'liberar') {
+    if (action === 'pagado') {
+      const waWindow = window.open('', '_blank');
+      quickUpdate(number, 'vendido', waWindow);
+    } else if (action === 'liberar') {
       if (confirm(`¿Liberar el boleto #${number} y volverlo disponible?`)) quickUpdate(number, 'disponible');
     } else if (action === 'apartar' || action === 'editar') openEditModal(number);
   });
@@ -253,7 +323,10 @@
   passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
   logoutBtn.addEventListener('click', logout);
   editCancelBtn.addEventListener('click', closeEditModal);
-  editSaveBtn.addEventListener('click', saveEdit);
+  editSaveBtn.addEventListener('click', () => {
+    const waWindow = editStatus.value === 'vendido' ? window.open('', '_blank') : null;
+    saveEdit(waWindow);
+  });
 
   checkSession();
 })();

@@ -44,6 +44,18 @@
   padding: 18px 16px 60px;
 }
 
+.wa-banner {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  margin-bottom: 14px;
+}
+
+.wa-banner a { color: var(--green); font-weight: 700; }
+
 .summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
