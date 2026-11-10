@@ -11,6 +11,9 @@ module.exports = (req, res) => {
     totalTickets: Number(process.env.TOTAL_TICKETS || 300),
     contactWhatsapp: process.env.CONTACT_WHATSAPP || '',
     contactWhatsappLink: process.env.CONTACT_WHATSAPP_LINK || '',
-    paymentInfo: process.env.PAYMENT_INFO || '',
+    paymentBeneficiary: process.env.PAYMENT_BENEFICIARY || '',
+    paymentBank: process.env.PAYMENT_BANK || '',
+    paymentClabe: process.env.PAYMENT_CLABE || '',
+    paymentNote: process.env.PAYMENT_NOTE || '',
   });
 };

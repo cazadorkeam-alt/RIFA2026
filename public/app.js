@@ -11,6 +11,14 @@
   const phoneInput = document.getElementById('phoneInput');
   const modalAlert = document.getElementById('modalAlert');
   const paymentInfoBox = document.getElementById('paymentInfoBox');
+  const reserveFormFields = document.getElementById('reserveFormFields');
+  const modalCloseActions = document.getElementById('modalCloseActions');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  const paymentBeneficiaryEl = document.getElementById('paymentBeneficiary');
+  const paymentBankEl = document.getElementById('paymentBank');
+  const paymentClabeEl = document.getElementById('paymentClabe');
+  const paymentNoteEl = document.getElementById('paymentNote');
+  const copyClabeBtn = document.getElementById('copyClabeBtn');
 
   let config = { price: 0, currency: 'MXN' };
   let tickets = new Map(); // number -> status
@@ -81,6 +89,8 @@
   function openModal() {
     modalAlert.innerHTML = '';
     paymentInfoBox.classList.add('hidden');
+    reserveFormFields.classList.remove('hidden');
+    modalCloseActions.classList.add('hidden');
     modalSelectedList.innerHTML = '';
     [...selected].sort((a, b) => a - b).forEach((n) => {
       const span = document.createElement('span');
@@ -123,10 +133,21 @@
     const measure = document.createElement('canvas').getContext('2d');
     measure.font = `600 15px ${FONT}`;
     const rulesLines = config.drawRules ? wrapText(measure, config.drawRules, usableWidth) : [];
+
+    const paymentSummaryLines = [];
+    if (config.paymentBeneficiary) paymentSummaryLines.push(`Beneficiario: ${config.paymentBeneficiary}`);
+    if (config.paymentBank) paymentSummaryLines.push(`Banco: ${config.paymentBank}`);
+    if (config.paymentClabe) paymentSummaryLines.push(`CLABE: ${config.paymentClabe}`);
     let paymentLines = [];
-    if (config.paymentInfo) {
-      measure.font = `400 13px ${FONT}`;
-      paymentLines = wrapText(measure, config.paymentInfo, usableWidth - 24);
+    if (paymentSummaryLines.length) {
+      measure.font = `600 13px ${FONT}`;
+      paymentSummaryLines.forEach((line) => {
+        paymentLines.push(...wrapText(measure, line, usableWidth - 24));
+      });
+      if (config.paymentNote) {
+        measure.font = `400 12px ${FONT}`;
+        paymentLines.push(...wrapText(measure, config.paymentNote, usableWidth - 24));
+      }
     }
 
     const pillW = 78;
@@ -360,8 +381,14 @@
       msg += 'El administrador confirmará tu pago.</div>';
       modalAlert.innerHTML = msg;
 
-      if (config.paymentInfo) {
-        paymentInfoBox.textContent = config.paymentInfo;
+      reserveFormFields.classList.add('hidden');
+      modalCloseActions.classList.remove('hidden');
+
+      if (config.paymentBeneficiary || config.paymentClabe) {
+        paymentBeneficiaryEl.textContent = config.paymentBeneficiary || '—';
+        paymentBankEl.textContent = config.paymentBank || '—';
+        paymentClabeEl.textContent = config.paymentClabe || '—';
+        paymentNoteEl.textContent = config.paymentNote || '';
         paymentInfoBox.classList.remove('hidden');
       }
 
@@ -387,9 +414,35 @@
     }
   }
 
+  async function copyClabe() {
+    const clabe = config.paymentClabe || '';
+    if (!clabe) return;
+    const original = copyClabeBtn.textContent;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(clabe);
+      } else {
+        const temp = document.createElement('textarea');
+        temp.value = clabe;
+        temp.style.position = 'fixed';
+        temp.style.opacity = '0';
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+      }
+      copyClabeBtn.textContent = '✅ Copiado';
+    } catch {
+      copyClabeBtn.textContent = '⚠️ No se pudo copiar';
+    }
+    setTimeout(() => { copyClabeBtn.textContent = original; }, 2000);
+  }
+
   openModalBtn.addEventListener('click', openModal);
   cancelModalBtn.addEventListener('click', closeModal);
+  closeModalBtn.addEventListener('click', closeModal);
   confirmReserveBtn.addEventListener('click', confirmReserve);
+  copyClabeBtn.addEventListener('click', copyClabe);
 
   (async function init() {
     await loadConfig();

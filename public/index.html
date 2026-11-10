@@ -42,18 +42,34 @@
       <h2>Apartar boletos</h2>
       <div class="selected-list" id="modalSelectedList"></div>
 
-      <label for="nameInput">Nombre completo</label>
-      <input id="nameInput" type="text" placeholder="Tu nombre" maxlength="120" />
+      <div id="reserveFormFields">
+        <label for="nameInput">Nombre completo</label>
+        <input id="nameInput" type="text" placeholder="Tu nombre" maxlength="120" />
 
-      <label for="phoneInput">Teléfono (WhatsApp)</label>
-      <input id="phoneInput" type="tel" placeholder="10 dígitos" maxlength="40" />
+        <label for="phoneInput">Teléfono (WhatsApp)</label>
+        <input id="phoneInput" type="tel" placeholder="10 dígitos" maxlength="40" />
+
+        <div class="actions">
+          <button class="secondary" id="cancelModalBtn">Cancelar</button>
+          <button class="primary" id="confirmReserveBtn">Confirmar</button>
+        </div>
+      </div>
 
       <div id="modalAlert"></div>
-      <div id="paymentInfoBox" class="alert success hidden"></div>
 
-      <div class="actions">
-        <button class="secondary" id="cancelModalBtn">Cancelar</button>
-        <button class="primary" id="confirmReserveBtn">Confirmar</button>
+      <div id="paymentInfoBox" class="payment-card hidden">
+        <div class="payment-row"><span class="payment-label">Beneficiario</span><span id="paymentBeneficiary"></span></div>
+        <div class="payment-row"><span class="payment-label">Banco</span><span id="paymentBank"></span></div>
+        <div class="payment-row clabe-row">
+          <span class="payment-label">CLABE</span>
+          <span id="paymentClabe" class="clabe-value"></span>
+          <button type="button" id="copyClabeBtn" class="copy-btn">📋 Copiar</button>
+        </div>
+        <p id="paymentNote" class="payment-note"></p>
+      </div>
+
+      <div id="modalCloseActions" class="actions hidden">
+        <button class="secondary" id="closeModalBtn">Cerrar</button>
       </div>
     </div>
   </div>
